@@ -5,6 +5,15 @@
 volatile long encoder1_pos = 0;
 volatile long encoder2_pos = 0;
 
+int motor1_pwm = 200; //initialize motor speed PWM
+int motor2_pwm = 200;
+
+
+const int ENCODER_ERROR_THRESHOLD = 5;
+const int PWM_ADJUSTMENT = 20;
+
+
+
 void readEncoder1(){
   if(digitalRead(ENCODER1_A) == digitalRead(ENCODER1_B)){
     encoder1_pos++;
@@ -72,6 +81,27 @@ void loop() {
   waitForSerialLink(nh.connected());
 
 }
+
+void adjustMotorSpeeds(){
+  long encoder_diff = encoder1_pos - encoder2_pos;
+
+  if(abs(encoder_diff)> ENCODER_ERROR_THRESHOLD){
+    if(encoder_diff > 0){
+      motor1_pwm = max(0,motor1_pwm - PWM_ADJUSTMENT);
+      motor2_pwm = min(255,motor2_pwm - PWM_ADJUSTMENT);
+    }else if(encoder_diff < 0){
+      motor1_pwm = max(0,motor2_pwm - PWM_ADJUSTMENT);
+      motor2_pwm = min(255,motor1_pwm + PWM_ADJUSTMENT);
+    }
+
+   analogWrite(MOTOR1_PWM, motor1_pwm);
+   analogWrite(MOTOR2_PWM, motor2_pwm);
+    
+  }
+}
+
+
+
 
 void control_callback(const std_msgs::String& msg){
   String command = msg.data;
