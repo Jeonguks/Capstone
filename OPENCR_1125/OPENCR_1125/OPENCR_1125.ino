@@ -13,11 +13,15 @@ const int ENCODER_ERROR_THRESHOLD = 5;
 const int PWM_ADJUSTMENT = 20;
 
 
+String current_led_command = "";  
+
+unsigned long last_time = 0;
+const unsigned long interval = 1000/15;
 
 void readEncoder1(){
   if(digitalRead(ENCODER1_A) == digitalRead(ENCODER1_B)){
     encoder1_pos++;
-  }else{
+  }else{     
     encoder1_pos--;
   }
 }
@@ -40,6 +44,8 @@ void setup() {
   nh.getHardware()->setBaud(115200);
 
   nh.subscribe(vehicle_control_sub); //add HERE
+
+  nh.subscribe(led_command_sub); //add HERE
 
   pinMode(LED_WORKING_CHECK, OUTPUT);
 
@@ -78,19 +84,60 @@ void setup() {
 
 void loop() {
 
-//  Serial.print("motor1 : ");
-//  Serial.println(encoder1_pos);
-//  Serial.print("motor2 : ");
-//  Serial.println(encoder2_pos);
 
-  delay(100);
+  unsigned long current_time = millis();
 
-  uint32_t t = millis();
+  if(current_time - last_time >= interval){
+    last_time = current_time;
+  }
+  
   updateTime();
 
   nh.spinOnce();
+  
   waitForSerialLink(nh.connected());
+  
+  adjustMotorSpeeds();
+  
+  updateLEDStatus();
+}
 
+void updateLEDStatus(){
+  if(current_led_command == "STANDBY"){
+    digitalWrite(14,HIGH);
+    digitalWrite(13,LOW);
+    digitalWrite(12,HIGH);
+    delay(500);
+    digitalWrite(13,HIGH);
+    digitalWrite(12,HIGH);
+    delay(500);
+  }else if(current_led_command == "GO"){
+     digitalWrite(15,HIGH);
+     digitalWrite(14,HIGH);
+     digitalWrite(13,LOW);
+     digitalWrite(12,HIGH);
+  }else if(current_led_command == "HAND" || current_led_command == "WAITING"){
+     digitalWrite(15,HIGH);
+     digitalWrite(14,LOW);
+     digitalWrite(13,HIGH);
+     digitalWrite(12,LOW);
+     delay(500);
+     digitalWrite(14,HIGH);
+     digitalWrite(13,HIGH);
+     digitalWrite(12,HIGH);
+     delay(500);
+  }else if(current_led_command == "FOLLOWME"){
+     digitalWrite(15,HIGH);
+     digitalWrite(14,LOW);
+     digitalWrite(13,HIGH);
+     digitalWrite(12,LOW);
+  }else{
+    digitalWrite(15,HIGH);
+    digitalWrite(14,LOW);
+    digitalWrite(13,HIGH);
+    digitalWrite(12,LOW);
+  }
+  
 }
 
 void adjustMotorSpeeds(){
@@ -107,47 +154,18 @@ void adjustMotorSpeeds(){
 
    analogWrite(MOTOR1_PWM, motor1_pwm);
    analogWrite(MOTOR2_PWM, motor2_pwm);
-    
+
+   motor_status_msg_motor1.data = motor1_pwm;
+   motor_status_msg_motor2.data = motor2_pwm;
+   motor_status_pub_motor1.publish(&motor_status_msg_motor1);
+   motor_status_pub_motor2.publish(&motor_status_msg_motor2);
   }
 }
 
 void led_callback(const std_msgs::String& msg){
-  String led_command = msg.data;
-  if(led_command == "STANDBY"){
-    digitalWrite(14,HIGH);
-    digitalWrite(13,LOW);
-    digitalWrite(12,HIGH);
-    delay(500);
-    digitalWrite(13,HIGH);
-    digitalWrite(12,HIGH);
-    delay(500);
-  }else if(led_command == "GO"){
-     digitalWrite(15,HIGH);
-     digitalWrite(14,HIGH);
-     digitalWrite(13,LOW);
-     digitalWrite(12,HIGH);
-  }else if(led_command == "HAND" || led_command == "WAITING"){
-     digitalWrite(15,HIGH);
-     digitalWrite(14,LOW);
-     digitalWrite(13,HIGH);
-     digitalWrite(12,LOW);
-     delay(500);
-     digitalWrite(14,HIGH);
-     digitalWrite(13,HIGH);
-     digitalWrite(12,HIGH);
-     delay(500);
-  }else if(led_command == "FOLLOWME"){
-     digitalWrite(15,HIGH);
-     digitalWrite(14,LOW);
-     digitalWrite(13,HIGH);
-     digitalWrite(12,LOW);
-  }else{
-    digitalWrite(15,HIGH);
-    digitalWrite(14,LOW);
-    digitalWrite(13,HIGH);
-    digitalWrite(12,LOW);
-  }
-}
+  current_led_command = msg.data; 
+  updateLEDStatus();
+} 
 
 
 

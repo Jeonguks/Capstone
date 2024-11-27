@@ -25,6 +25,8 @@
 #define MOTOR2_DIR1 8 
 #define MOTOR2_DIR2 9
 
+
+
 void control_callback(const std_msgs::String& msg);
 void led_callback(const std_msgs::String& msg);
 
@@ -39,8 +41,15 @@ ros::NodeHandle nh;
 ros::Time current_time;
 uint32_t current_offset;
 
+std_msgs::Int32 motor_status_msg_motor1;
+std_msgs::Int32 motor_status_msg_motor2;
+
+
+ros::Publisher motor_status_pub_motor1("motor1_status", &motor_status_msg_motor1);
+ros::Publisher motor_status_pub_motor2("motor2_status", &motor_status_msg_motor2);
+
 ros::Subscriber<std_msgs::String> vehicle_control_sub("/vehicle_control", &control_callback);
-ros::Subscriber<std_msgs::String> led_command("/led_command", &led_callback);
+ros::Subscriber<std_msgs::String> led_command_sub("/led_command", &led_callback);
 
 
 #endif
