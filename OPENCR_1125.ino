@@ -47,13 +47,23 @@ void setup() {
   pinMode(MOTOR1_DIR2, OUTPUT);
   pinMode(MOTOR2_DIR1, OUTPUT);
   pinMode(MOTOR2_DIR2, OUTPUT);
-
+  pinMode(15, OUTPUT);
+  pinMode(14, OUTPUT);
+  pinMode(13, OUTPUT);
+  pinMode(12, OUTPUT);
+  
   attachInterrupt(digitalPinToInterrupt(ENCODER1_A), readEncoder1, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENCODER2_A), readEncoder2, CHANGE);
   
   analogWrite(MOTOR1_PWM,200);
   analogWrite(MOTOR2_PWM,200);
 
+  digitalWrite(15,HIGH);
+  digitalWrite(14,LOW);
+  digitalWrite(13,HIGH);
+  digitalWrite(12,LOW);
+
+  
 }
 
 void loop() {
@@ -83,33 +93,69 @@ void control_callback(const std_msgs::String& msg){
     digitalWrite(MOTOR2_DIR1,LOW);
     digitalWrite(MOTOR2_DIR2,HIGH);
     
-  } else if(command =="FORWARD"){
+  }else if(command =="FORWARD"){
     
     digitalWrite(MOTOR1_DIR1,HIGH); //FORWARD
     digitalWrite(MOTOR1_DIR2,LOW);
     digitalWrite(MOTOR2_DIR1,HIGH);
     digitalWrite(MOTOR2_DIR2,LOW);
     
-  } else if(command == "RIGHT"){
+  }else if(command == "RIGHT"){
     
     digitalWrite(MOTOR1_DIR1,LOW); //RIGHT
     digitalWrite(MOTOR1_DIR2,HIGH);
     digitalWrite(MOTOR2_DIR1,HIGH);
     digitalWrite(MOTOR2_DIR2,LOW);
     
-  } else if(command == "LEFT"){
+  }else if(command == "LEFT"){
     
     digitalWrite(MOTOR1_DIR1,HIGH); //LEFT
     digitalWrite(MOTOR1_DIR2,LOW);
     digitalWrite(MOTOR2_DIR1,LOW);
     digitalWrite(MOTOR2_DIR2,HIGH);
 
-  } else{
-    
+  }else if(command == "STANDBY"){
+    digitalWrite(14,HIGH);
+    digitalWrite(13,LOW);
+    digitalWrite(12,HIGH);
+    delay(500);
+    digitalWrite(13,HIGH);
+    digitalWrite(12,HIGH);
+    delay(500);
+  }else if(command == "GO"){
+     digitalWrite(15,HIGH);
+     digitalWrite(14,HIGH);
+     digitalWrite(13,LOW);
+     digitalWrite(12,HIGH);
+  }else if(command == "HAND" || command == "WAITING"){
+     digitalWrite(15,HIGH);
+     digitalWrite(14,LOW);
+     digitalWrite(13,HIGH);
+     digitalWrite(12,LOW);
+     delay(500);
+     digitalWrite(14,HIGH);
+     digitalWrite(13,HIGH);
+     digitalWrite(12,HIGH);
+     delay(500);
+  }else if(command == "FOLLOWME"){
+     digitalWrite(15,HIGH);
+     digitalWrite(14,LOW);
+     digitalWrite(13,HIGH);
+     digitalWrite(12,LOW);
+  }else if(command !="STANDBY"||command !="GO"||command !="HAND"||command !="WAITING"||command !="FOLLOWME"){
+    digitalWrite(15,HIGH);
+    digitalWrite(14,LOW);
+    digitalWrite(13,HIGH);
+    digitalWrite(12,LOW);
+  }else{ 
     digitalWrite(MOTOR1_DIR1,LOW); //Break
     digitalWrite(MOTOR1_DIR2,LOW);
     digitalWrite(MOTOR2_DIR1,LOW);
     digitalWrite(MOTOR2_DIR2,LOW);
+    digitalWrite(15,HIGH);
+    digitalWrite(14,LOW);
+    digitalWrite(13,HIGH);
+    digitalWrite(12,LOW);
     
   }
 }
